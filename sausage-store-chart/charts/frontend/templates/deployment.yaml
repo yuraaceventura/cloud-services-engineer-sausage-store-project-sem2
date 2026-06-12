@@ -27,22 +27,16 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: {{ .Values.image }}
-          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-          resources:
-{{ toYaml .Values.resources | indent 12 }} 
-          ports:
-            - name: {{ .Chart.Name }}
-              containerPort: {{ .Values.containerPort }}
+          ...
           volumeMounts:
-          - name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
-            mountPath: /etc/nginx/{{ .Values.nginxConf }}
-            subPath: {{ .Values.nginxConf }}
-            readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
       volumes:
-        - name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
+        - name: nginx-config
           configMap:
             name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
             items:
               - key: {{ .Values.nginxConf }}
-                path: {{ .Values.nginxConf }} 
+                path: nginx.conf  
