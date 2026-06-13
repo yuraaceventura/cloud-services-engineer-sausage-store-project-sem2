@@ -86,6 +86,8 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
 
       - name: Add Nexus Helm repo
         run: |
@@ -93,6 +95,13 @@ jobs:
             --username "${{ env.NEXUS_HELM_REPO_USER }}" \
             --password "${{ env.NEXUS_HELM_REPO_PASSWORD }}"
           helm repo update
+
+      - name: Debug Helm repo
+        run: |
+          echo "Available repos:"
+          helm repo list
+          echo "Search for chart:"
+          helm search repo nexus/sausage-store || echo "Chart not found"
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
@@ -103,12 +112,18 @@ jobs:
         run: |
           mkdir -p $HOME/.kube
           echo "${{ env.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config   
+          chmod 600 $HOME/.kube/config
 
       - name: Deploy with Helm
         run: |
+          # Проверка, что namespace задан
+          if [ -z "${{ env.SAUSAGE_STORE_NAMESPACE }}" ]; then
+            echo "ERROR: SAUSAGE_STORE_NAMESPACE is empty"
+            exit 1
+          fi
+
           helm upgrade --install sausage-store \
-            nexus/sausage-store \                     
+            nexus/sausage-store \
             --namespace "${{ env.SAUSAGE_STORE_NAMESPACE }}" \
             --create-namespace \
             --set global.imagePullPolicy=Always \
