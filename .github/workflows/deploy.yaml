@@ -65,15 +65,26 @@ jobs:
         run: |
           cd sausage-store-chart
           helm package . --version 0.1.0 --app-version ${{ github.sha }}
-          mv sausage-store-*.tgz ../sausage-store-chart.tgz
+          # Показываем имя созданного файла
+          ls -la *.tgz
+          # Перемещаем в корень с фиксированным именем
+          mv *.tgz ../sausage-store.tgz
 
       - name: Upload to Nexus Helm repo
         run: |
-          curl -u "${{ env.NEXUS_HELM_REPO_USER }}:${{ env.NEXUS_HELM_REPO_PASSWORD }}" \
+          curl -v -u "${{ env.NEXUS_HELM_REPO_USER }}:${{ env.NEXUS_HELM_REPO_PASSWORD }}" \
               -X POST \
-              "${{ env.NEXUS_HELM_REPO }}/sausage-store-chart.tgz" \
+              "${{ env.NEXUS_HELM_REPO }}/sausage-store.tgz" \
               -H "Content-Type: application/gzip" \
-              --data-binary "@sausage-store-chart.tgz"
+              --data-binary "@sausage-store.tgz"
+
+      - name: Verify upload
+        run: |
+          helm repo add nexus-temp "${{ env.NEXUS_HELM_REPO }}" \
+            --username "${{ env.NEXUS_HELM_REPO_USER }}" \
+            --password "${{ env.NEXUS_HELM_REPO_PASSWORD }}"
+          helm repo update
+          helm search repo nexus-temp/sausage-store || echo "Chart not found in repo"
 
     # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
   deploy_helm_chart_to_kubernetes:
@@ -96,12 +107,9 @@ jobs:
             --password "${{ env.NEXUS_HELM_REPO_PASSWORD }}"
           helm repo update
 
-      - name: Debug Helm repo
+      - name: List charts in Nexus
         run: |
-          echo "Available repos:"
-          helm repo list
-          echo "Search for chart:"
-          helm search repo nexus/sausage-store || echo "Chart not found"
+          helm search repo nexus/ --devel
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
@@ -116,12 +124,6 @@ jobs:
 
       - name: Deploy with Helm
         run: |
-          # Проверка, что namespace задан
-          if [ -z "${{ env.SAUSAGE_STORE_NAMESPACE }}" ]; then
-            echo "ERROR: SAUSAGE_STORE_NAMESPACE is empty"
-            exit 1
-          fi
-
           helm upgrade --install sausage-store \
             nexus/sausage-store \
             --namespace "${{ env.SAUSAGE_STORE_NAMESPACE }}" \
