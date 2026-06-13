@@ -65,18 +65,18 @@ jobs:
         run: |
           cd sausage-store-chart
           helm package . --version 0.1.0 --app-version ${{ github.sha }}
-          # Показываем имя созданного файла
-          ls -la *.tgz
-          # Перемещаем в корень с фиксированным именем
-          mv *.tgz ../sausage-store.tgz
+          chart_file=$(ls *.tgz)
+          echo "CHART_FILE=$chart_file" >> $GITHUB_ENV
+          mv "$chart_file" ../
 
       - name: Upload to Nexus Helm repo
         run: |
+          REPO_URL="${{ env.NEXUS_HELM_REPO }}"
+          [[ "$REPO_URL" == */ ]] || REPO_URL="$REPO_URL/"
           curl -v -u "${{ env.NEXUS_HELM_REPO_USER }}:${{ env.NEXUS_HELM_REPO_PASSWORD }}" \
-              -X POST \
-              "${{ env.NEXUS_HELM_REPO }}/sausage-store.tgz" \
+              -X POST "$REPO_URL" \
               -H "Content-Type: application/gzip" \
-              --data-binary "@sausage-store.tgz"
+              --data-binary "@${{ env.CHART_FILE }}"
 
       - name: Verify upload
         run: |
@@ -84,7 +84,7 @@ jobs:
             --username "${{ env.NEXUS_HELM_REPO_USER }}" \
             --password "${{ env.NEXUS_HELM_REPO_PASSWORD }}"
           helm repo update
-          helm search repo nexus-temp/sausage-store || echo "Chart not found in repo"
+          helm search repo nexus-temp/sausage-store --devel
 
     # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
   deploy_helm_chart_to_kubernetes:
