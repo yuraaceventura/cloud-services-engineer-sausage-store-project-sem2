@@ -103,11 +103,12 @@ jobs:
         run: |
           mkdir -p $HOME/.kube
           echo "${{ env.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config   
 
       - name: Deploy with Helm
         run: |
           helm upgrade --install sausage-store \
-            nexus/sausage-store-chart \
+            nexus/sausage-store \                     
             --namespace "${{ env.SAUSAGE_STORE_NAMESPACE }}" \
             --create-namespace \
             --set global.imagePullPolicy=Always \
