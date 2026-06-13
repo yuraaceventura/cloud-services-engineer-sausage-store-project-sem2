@@ -1,13 +1,11 @@
-# Global settings
 global:
   imagePullPolicy: IfNotPresent
-  namespace: YOUR_NAMESPACE
+  namespace: r-devops-magistracy-project-2sem-1044860160
 
-# Backend subchart
 backend:
   enabled: true
   replicas: 2
-  image: YOUR_DOCKERHUB/sausage-backend:latest
+  image: yuraaceventura/sausage-backend:latest
   containerPort: 8080
   service:
     port: 8080
@@ -32,7 +30,7 @@ backend:
     periodSeconds: 10
   vpa:
     updatePolicy:
-      updateMode: "Off"   # только рекомендации
+      updateMode: "Off" 
     resourcePolicy:
       containerPolicies:
         - containerName: backend
@@ -43,17 +41,15 @@ backend:
             cpu: 1
             memory: 1Gi
   env:
-    postgresUri: "jdbc:postgresql://postgres-infra:5432/sausage-store?useSSL=false"
+    postgresUri: "jdbc:postgresql://postgres:5432/sausage-store?useSSL=false"
     postgresUser: "store"
     reportPath: "/logs/reports"
     logPath: "/logs"
-  # Секреты вынесены в отдельный secret, не в values
 
-# Backend-report subchart
 backendReport:
   enabled: true
   replicas: 1
-  image: YOUR_DOCKERHUB/sausage-backend-report:latest
+  image: yuraaceventura/sausage-backend-report:latest
   containerPort: 8080
   service:
     port: 8080
@@ -74,13 +70,13 @@ backendReport:
     targetCPUUtilizationPercentage: 70
   env:
     port: "8080"
-    mongoDbUri: "mongodb://reports:reportspassword@mongodb-infra:27017/sausage-store"
+    mongoDbUri: "mongodb://reports:reportspassword@mongodb:27017/sausage-store"
 
 # Frontend subchart
 frontend:
   enabled: true
   replicas: 2
-  image: YOUR_DOCKERHUB/sausage-frontend:latest
+  image: yuraaceventura/sausage-frontend:latest
   containerPort: 80
   service:
     port: 80
@@ -96,7 +92,7 @@ frontend:
       cpu: "100m"
   ingress:
     enabled: true
-    host: sausage-store.example.com   # замените на реальный
+    host: sausage-store.example.com
     path: /
     pathType: Prefix
   nginxConf: nginx.conf
@@ -119,7 +115,6 @@ infra:
     env:
       POSTGRES_DB: sausage-store
       POSTGRES_USER: store
-      # пароль передаётся через secret
   mongodb:
     enabled: true
     image: mongo:7.0
@@ -135,4 +130,3 @@ infra:
       size: 1Gi
     env:
       MONGO_INITDB_ROOT_USERNAME: reports
-      # пароль через secret
