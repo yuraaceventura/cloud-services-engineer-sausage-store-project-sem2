@@ -47,6 +47,7 @@ jobs:
             context: ./backend-report/
             push: true
             tags: ${{ secrets.DOCKER_USER }}/sausage-backend-report:latest
+
   # Упаковываем helm-чарт и пушим его в Nexus
   add_helm_chart_to_nexus:
     name: Add Helm Chart To Nexus
@@ -61,27 +62,11 @@ jobs:
         with:
           version: v3.12.0
 
-      - name: Install helm-nexus-push plugin
+      - name: Package and push chart to Nexus
         run: |
-          helm plugin install https://github.com/sonatype-nexus-community/helm-nexus-push
-
-      - name: Add Nexus Helm repo
-        run: |
-          helm repo add nexus "${{ env.NEXUS_HELM_REPO }}" \
-            --username "${{ env.NEXUS_HELM_REPO_USER }}" \
-            --password "${{ env.NEXUS_HELM_REPO_PASSWORD }}"
-
-      - name: Package and Push Chart
-        env:
-          NEXUS_USER: ${{ secrets.NEXUS_HELM_REPO_USER }}
-          NEXUS_PASS: ${{ secrets.NEXUS_HELM_REPO_PASSWORD }}
-          NEXUS_REPO_URL: ${{ secrets.NEXUS_HELM_REPO }}
-        run: |
-          # Initialize the login session for the repo
-          helm nexus-push login "$NEXUS_REPO_URL" -u "$NEXUS_USER" -p "$NEXUS_PASS"
-          
-          # Push the local chart directory directly
-          helm nexus-push "$NEXUS_REPO_URL" .
+          cd sausage-store-chart
+          helm package . 
+          curl -u "${{ env.NEXUS_HELM_REPO_USER}}:${{ env.NEXUS_HELM_REPO_PASSWORD}}" ${{ NEXUS_HELM_REPO}} --upload-file ./sausage-store-0.1.0.tgz -v
 
 
       # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
