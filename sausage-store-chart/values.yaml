@@ -28,6 +28,10 @@ backend:
       port: 8080
     initialDelaySeconds: 60
     periodSeconds: 10
+  annotations:
+    path: "/actuator/prometheus"
+    port: "8080"
+    scrape: "true"
   vpa:
     updatePolicy:
       updateMode: "Off" 
