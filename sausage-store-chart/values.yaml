@@ -50,7 +50,7 @@ backend:
     reportPath: "/logs/reports"
     logPath: "/logs"
 
-backendReport:
+backend-report:
   enabled: true
   replicas: 1
   image: yuraaceventura/sausage-backend-report:latest

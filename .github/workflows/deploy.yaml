@@ -120,7 +120,7 @@ jobs:
       - name: Debug values.yaml
         run: |
           ls -la values.yaml
-          cat values.yaml | grep -A 10 "backendReport:" || echo "backendReport section NOT found"
+          cat values.yaml
 
       - name: Full Helm template with all values
         run: |
