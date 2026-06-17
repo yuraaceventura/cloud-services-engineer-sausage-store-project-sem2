@@ -4,14 +4,14 @@ metadata:
   name: mongodb-secret
 type: Opaque
 data:
-  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.infra.mongodb.env.MONGO_INITDB_ROOT_PASSWORD | b64enc }}
+  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD | b64enc }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mongodb-conf
 data:
-  MONGO_INITDB_ROOT_USERNAME: {{ .Values.infra.mongodb.env.MONGO_INITDB_ROOT_USERNAME }}
+  MONGO_INITDB_ROOT_USERNAME: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_USERNAME }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -30,16 +30,16 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: {{ .Values.infra.mongodb.image }}
+        image: {{ .Values.mongodb.image }}
         envFrom:
           - configMapRef:
               name: mongodb-conf
           - secretRef:
               name: mongodb-secret
         ports:
-        - containerPort: {{ .Values.infra.mongodb.containerPort }}
+        - containerPort: {{ .Values.mongodb.containerPort }}
         resources:
-          {{- toYaml .Values.infra.mongodb.resources | nindent 10 }}
+          {{- toYaml .Values.mongodb.resources | nindent 10 }}
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
@@ -55,7 +55,7 @@ metadata:
   name: mongodb
 spec:
   ports:
-  - port: {{ .Values.infra.mongodb.containerPort }}
+  - port: {{ .Values.mongodb.containerPort }}
   selector:
     app: mongodb
   clusterIP: None
