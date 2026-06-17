@@ -1,4 +1,20 @@
+global:
+  imagePullPolicy: IfNotPresent
+  namespace: r-devops-magistracy-project-2sem-1044860160
+
 backend:
+  enabled: true
+  replicas: 2
+  image: yuraaceventura/sausage-backend:latest
+  containerPort: 8080
+  service:
+    port: 8080
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   resources:
     requests:
       memory: "128Mi"   # было 256Mi
@@ -6,17 +22,44 @@ backend:
     limits:
       memory: "512Mi"
       cpu: "500m"
-
-frontend:
-  resources:
-    requests:
-      memory: "32Mi"    # было 64Mi
-      cpu: "50m"
-    limits:
-      memory: "128Mi"
-      cpu: "100m"
+  livenessProbe:
+    httpGet:
+      path: /actuator/health
+      port: 8080
+    initialDelaySeconds: 60
+    periodSeconds: 10
+  annotations:
+    path: "/actuator/prometheus"
+    port: "8080"
+    scrape: "true"
+  vpa:
+    updatePolicy:
+      updateMode: "Off" 
+    resourcePolicy:
+      containerPolicies:
+        - containerName: backend
+          minAllowed:
+            cpu: 100m
+            memory: 256Mi
+          maxAllowed:
+            cpu: 1
+            memory: 1Gi
+  env:
+    postgresUri: "jdbc:postgresql://postgres:5432/sausage-store?useSSL=false"
+    postgresUser: "store"
+    reportPath: "/logs/reports"
+    logPath: "/logs"
 
 backend-report:
+  enabled: true
+  replicas: 1
+  image: yuraaceventura/sausage-backend-report:latest
+  containerPort: 8080
+  service:
+    port: 8080
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
   resources:
     requests:
       memory: "64Mi"    # было 128Mi
@@ -24,9 +67,46 @@ backend-report:
     limits:
       memory: "256Mi"
       cpu: "200m"
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  env:
+    port: "8080"
+    mongoDbUri: "mongodb://reports:reportspassword@mongodb:27017/sausage-store"
 
+# Frontend subchart
+frontend:
+  enabled: true
+  replicas: 2
+  image: yuraaceventura/sausage-frontend:latest
+  containerPort: 80
+  service:
+    port: 80
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+  resources:
+    requests:
+      memory: "32Mi"    # было 64Mi
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  ingress:
+    enabled: true
+    host: front-yura-sausage-store.com
+    path: /
+    pathType: Prefix
+  nginxConf: nginx.conf
+
+# Infra subchart (PostgreSQL + MongoDB)
 infra:
   postgresql:
+    enabled: true
+    image: postgres:15-alpine
+    containerPort: 5432
     resources:
       requests:
         memory: "128Mi" # было 256Mi
@@ -34,7 +114,15 @@ infra:
       limits:
         memory: "512Mi"
         cpu: "500m"
+    storage:
+      size: 2Gi
+    env:
+      POSTGRES_DB: sausage-store
+      POSTGRES_USER: store
   mongodb:
+    enabled: true
+    image: mongo:7.0
+    containerPort: 27017
     resources:
       requests:
         memory: "128Mi" # было 256Mi
@@ -42,3 +130,7 @@ infra:
       limits:
         memory: "512Mi"
         cpu: "300m"
+    storage:
+      size: 1Gi
+    env:
+      MONGO_INITDB_ROOT_USERNAME: reports
