@@ -122,7 +122,7 @@ jobs:
           ls -la values.yaml
           cat values.yaml | grep -A 10 "backendReport:" || echo "backendReport section NOT found"
 
-      - name: Debug Helm template
+      - name: Full Helm template with all values
         run: |
           helm template sausage-store nexus/sausage-store \
             -f values.yaml \
@@ -130,11 +130,15 @@ jobs:
             --set backend.image=${{ secrets.DOCKER_USER }}/sausage-backend:${{ github.sha }} \
             --set frontend.image=${{ secrets.DOCKER_USER }}/sausage-frontend:${{ github.sha }} \
             --set backendReport.image=${{ secrets.DOCKER_USER }}/sausage-backend-report:${{ github.sha }} \
+            --set infra.postgresql.env.POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
+            --set infra.mongodb.env.MONGO_INITDB_ROOT_PASSWORD="${{ secrets.MONGO_PASSWORD }}" \
+            --set backend.env.postgresPassword="${{ secrets.POSTGRES_PASSWORD }}" \
             --set backendReport.service.port=8080 \
             --set backendReport.containerPort=8080 \
             --set backendReport.env.port=8080 \
             --set backendReport.env.mongoDbUri="mongodb://reports:reportspassword@mongodb:27017/sausage-store" \
-            --debug 2>&1
+            --debug > full_template_output.txt 2>&1
+          cat full_template_output.txt
 
       - name: Deploy with Helm
         run: |
