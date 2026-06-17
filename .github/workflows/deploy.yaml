@@ -48,7 +48,6 @@ jobs:
             push: true
             tags: ${{ secrets.DOCKER_USER }}/sausage-backend-report:latest
 
-  # Упаковываем helm-чарт и пушим его в Nexus
   add_helm_chart_to_nexus:
     name: Add Helm Chart To Nexus
     runs-on: ubuntu-latest
@@ -62,14 +61,26 @@ jobs:
         with:
           version: v3.12.0
 
-      - name: Package and push chart to Nexus
+      - name: Package chart
         run: |
           cd sausage-store-chart
-          helm package . 
-          curl -u "${{ env.NEXUS_HELM_REPO_USER}}:${{ env.NEXUS_HELM_REPO_PASSWORD}}" ${{ env.NEXUS_HELM_REPO}} --upload-file ./sausage-store-0.1.0.tgz -v
+          helm package .
+          # проверяем, что values.yaml включён
+          tar -tzf sausage-store-0.1.0.tgz | grep values.yaml
 
+      - name: Upload chart to Nexus
+        run: |
+          cd sausage-store-chart
+          curl -u "${{ env.NEXUS_HELM_REPO_USER}}:${{ env.NEXUS_HELM_REPO_PASSWORD}}" \
+              ${{ env.NEXUS_HELM_REPO}} --upload-file ./sausage-store-0.1.0.tgz -v
 
-      # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
+      - name: Upload values.yaml as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: helm-values
+          path: sausage-store-chart/values.yaml
+
+        # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
   deploy_helm_chart_to_kubernetes:
     name: Deploy Helm Chart To Kubernetes
     runs-on: ubuntu-latest
@@ -101,12 +112,18 @@ jobs:
           echo "${{ env.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
+      - name: Download values artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: helm-values
+
       - name: Deploy with Helm
         run: |
           helm upgrade --install sausage-store \
             nexus/sausage-store \
             --namespace "${{ env.SAUSAGE_STORE_NAMESPACE }}" \
             --create-namespace \
+            -f values.yaml \
             --set global.imagePullPolicy=Always \
             --set backend.image=${{ secrets.DOCKER_USER }}/sausage-backend:${{ github.sha }} \
             --set frontend.image=${{ secrets.DOCKER_USER }}/sausage-frontend:${{ github.sha }} \

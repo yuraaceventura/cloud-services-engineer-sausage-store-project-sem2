@@ -96,7 +96,7 @@ frontend:
       cpu: "100m"
   ingress:
     enabled: true
-    host: sausage-store.example.com
+    host: front-yura-sausage-store.com
     path: /
     pathType: Prefix
   nginxConf: nginx.conf
