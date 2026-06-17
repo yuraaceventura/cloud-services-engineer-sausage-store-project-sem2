@@ -27,7 +27,13 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          ...
+          image: {{ .Values.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          ports:
+            - name: {{ .Chart.Name }}
+              containerPort: {{ .Values.containerPort }}
           volumeMounts:
             - name: nginx-config
               mountPath: /etc/nginx/nginx.conf
@@ -39,4 +45,4 @@ spec:
             name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
             items:
               - key: {{ .Values.nginxConf }}
-                path: nginx.conf  
+                path: nginx.conf
