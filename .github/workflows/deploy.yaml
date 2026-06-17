@@ -122,6 +122,20 @@ jobs:
           ls -la values.yaml
           cat values.yaml | grep -A 10 "backendReport:" || echo "backendReport section NOT found"
 
+      - name: Debug Helm template
+        run: |
+          helm template sausage-store nexus/sausage-store \
+            -f values.yaml \
+            --set global.imagePullPolicy=Always \
+            --set backend.image=${{ secrets.DOCKER_USER }}/sausage-backend:${{ github.sha }} \
+            --set frontend.image=${{ secrets.DOCKER_USER }}/sausage-frontend:${{ github.sha }} \
+            --set backendReport.image=${{ secrets.DOCKER_USER }}/sausage-backend-report:${{ github.sha }} \
+            --set backendReport.service.port=8080 \
+            --set backendReport.containerPort=8080 \
+            --set backendReport.env.port=8080 \
+            --set backendReport.env.mongoDbUri="mongodb://reports:reportspassword@mongodb:27017/sausage-store" \
+            --debug 2>&1 | grep -A 10 -B 10 "service.port" || echo "no match"
+
       - name: Deploy with Helm
         run: |
           helm upgrade --install sausage-store \
