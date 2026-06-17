@@ -4,15 +4,15 @@ metadata:
   name: postgres-secret
 type: Opaque
 data:
-  password: {{ .Values.infra.postgresql.env.POSTGRES_PASSWORD | b64enc | quote }}
+  password: {{ .Values.postgresql.env.POSTGRES_PASSWORD | b64enc | quote }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-config
 data:
-  POSTGRES_DB: {{ .Values.infra.postgresql.env.POSTGRES_DB }}
-  POSTGRES_USER: {{ .Values.infra.postgresql.env.POSTGRES_USER }}
+  POSTGRES_DB: {{ .Values.postgresql.env.POSTGRES_DB }}
+  POSTGRES_USER: {{ .Values.postgresql.env.POSTGRES_USER }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -31,9 +31,9 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: {{ .Values.infra.postgresql.image }}
+          image: {{ .Values.postgresql.image }}
           ports:
-            - containerPort: {{ .Values.infra.postgresql.containerPort }}
+            - containerPort: {{ .Values.postgresql.containerPort }}
           envFrom:
             - configMapRef:
                 name: postgres-config
@@ -43,11 +43,11 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
           resources:
-            {{- toYaml .Values.infra.postgresql.resources | nindent 12 }}
-      volumes:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+      volumes:   # ← добавляем volumes вместо volumeClaimTemplates
         - name: postgres-data
           hostPath:
-            path: /data/postgresql
+            path: /data/postgresql   # путь на хосте (должен существовать)
             type: DirectoryOrCreate
 ---
 apiVersion: v1
@@ -58,5 +58,5 @@ spec:
   selector:
     app: postgres
   ports:
-    - port: {{ .Values.infra.postgresql.containerPort }}
+    - port: {{ .Values.postgresql.containerPort }}
   clusterIP: None
