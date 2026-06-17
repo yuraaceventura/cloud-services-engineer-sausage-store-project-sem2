@@ -44,14 +44,11 @@ spec:
               mountPath: /var/lib/postgresql/data
           resources:
             {{- toYaml .Values.postgresql.resources | nindent 12 }}
-  volumeClaimTemplates:
-    - metadata:
-        name: postgres-data
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: {{ .Values.postgresql.storage.size }}
+      volumes:   # ← добавляем volumes вместо volumeClaimTemplates
+        - name: postgres-data
+          hostPath:
+            path: /data/postgresql   # путь на хосте (должен существовать)
+            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service
