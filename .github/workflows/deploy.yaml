@@ -137,8 +137,7 @@ jobs:
             --set backendReport.containerPort=8080 \
             --set backendReport.env.port=8080 \
             --set backendReport.env.mongoDbUri="mongodb://reports:reportspassword@mongodb:27017/sausage-store" \
-            --debug > full_template_output.txt 2>&1
-          cat full_template_output.txt
+            --debug 2>&1
 
       - name: Deploy with Helm
         run: |
