@@ -144,7 +144,6 @@ jobs:
           helm upgrade --install sausage-store \
             nexus/sausage-store \
             --namespace "${{ env.SAUSAGE_STORE_NAMESPACE }}" \
-            --create-namespace \
             -f values.yaml \
             --set global.imagePullPolicy=Always \
             --set backend.image=${{ secrets.DOCKER_USER }}/sausage-backend:${{ github.sha }} \
