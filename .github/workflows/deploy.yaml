@@ -75,7 +75,7 @@ jobs:
               ${{ env.NEXUS_HELM_REPO}} --upload-file ./sausage-store-0.1.0.tgz -v
 
       - name: Upload values.yaml as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: helm-values
           path: sausage-store-chart/values.yaml
@@ -113,7 +113,7 @@ jobs:
           chmod 600 $HOME/.kube/config
 
       - name: Download values artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: helm-values
 
