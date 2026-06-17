@@ -126,9 +126,9 @@ jobs:
           helm template sausage-store nexus/sausage-store \
             -f values.yaml \
             --set global.imagePullPolicy=Always \
-            --set backend.image=${{ secrets.DOCKER_USER }}/sausage-backend:${{ github.sha }} \
-            --set frontend.image=${{ secrets.DOCKER_USER }}/sausage-frontend:${{ github.sha }} \
-            --set backendReport.image=${{ secrets.DOCKER_USER }}/sausage-backend-report:${{ github.sha }} \
+            --set backend.image=${{ secrets.DOCKER_USER }}/sausage-backend:latest \
+            --set frontend.image=${{ secrets.DOCKER_USER }}/sausage-frontend:latest \
+            --set backendReport.image=${{ secrets.DOCKER_USER }}/sausage-backend-report:latest \
             --set infra.postgresql.env.POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
             --set infra.mongodb.env.MONGO_INITDB_ROOT_PASSWORD="${{ secrets.MONGO_PASSWORD }}" \
             --set backend.env.postgresPassword="${{ secrets.POSTGRES_PASSWORD }}" \
