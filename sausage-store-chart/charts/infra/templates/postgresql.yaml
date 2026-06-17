@@ -34,20 +34,31 @@ spec:
           image: {{ .Values.postgresql.image }}
           ports:
             - containerPort: {{ .Values.postgresql.containerPort }}
-          envFrom:
-            - configMapRef:
-                name: postgres-config
-            - secretRef:
-                name: postgres-secret
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_USER
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
           resources:
             {{- toYaml .Values.postgresql.resources | nindent 12 }}
-      volumes:   # ← добавляем volumes вместо volumeClaimTemplates
+      volumes:
         - name: postgres-data
           hostPath:
-            path: /data/postgresql   # путь на хосте (должен существовать)
+            path: /data/postgresql
             type: DirectoryOrCreate
 ---
 apiVersion: v1
