@@ -6,5 +6,5 @@ spec:
   selector:
     app: {{ .Release.Name }}-{{ .Chart.Name }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.containerPort }}
+    - port: 8080
+      targetPort: 8080
