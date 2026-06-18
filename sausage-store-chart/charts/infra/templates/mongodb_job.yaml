@@ -56,9 +56,9 @@ spec:
                   key: MONGO_INITDB_ROOT_USERNAME
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
-                configMapKeyRef:
-                  name: mongodb-conf
-                  key: MONGO_INITDB_ROOT_PASSWORD
+                secretKeyRef:              
+                  name: mongodb-secret    
+                  key: MONGO_INITDB_ROOT_PASSWORD  
             - name: REPORTS_DB
               value: {{ .Values.mongodb.reports.database }}
             - name: REPORTS_USER

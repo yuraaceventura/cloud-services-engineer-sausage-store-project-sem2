@@ -4,7 +4,7 @@ metadata:
   name: mongodb-secret
 type: Opaque
 data:
-  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD }}
+  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD | b64enc }}
 ---
 apiVersion: v1
 kind: ConfigMap
