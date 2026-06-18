@@ -125,7 +125,3 @@ jobs:
             --set backend.image=yuraaceventura/sausage-backend:latest \
             --set frontend.image=yuraaceventura/sausage-frontend:latest \
             --set backendReport.image=yuraaceventura/sausage-backend-report:latest \
-            --set infra.postgresql.env.POSTGRES_PASSWORD="storepassword" \
-            --set infra.mongodb.env.MONGO_INITDB_ROOT_PASSWORD="rootpassword" \
-            --set backend.env.postgresPassword="storepassword" \
-            --set backendReport.env.mongoDbUri="mongodb://reports:reportspassword@mongodb:27017/sausage-store"
